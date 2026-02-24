@@ -9,6 +9,7 @@ import com.example.service.BackendBashTask.DelFileFormRM;
 import com.example.service.LibraryService;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
+import io.smallrye.common.annotation.RunOnVirtualThread;
 import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
@@ -35,6 +36,7 @@ import java.util.Map;
 @Slf4j
 @Path("/api/library")
 @RolesAllowed({ "User", "Admin" })
+@RunOnVirtualThread
 public class LibraryController {
 
 //    @GET

@@ -120,7 +120,7 @@
                 class="albumId"
                 v-model="item.aid"
                 placeholder="未记录"
-                disabled
+                readonly
             >
               <template #prefix>
                 <el-text class="a-text" size="small">本子ID</el-text>

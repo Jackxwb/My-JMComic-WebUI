@@ -4,6 +4,7 @@ import com.example.entity.ApiResponse;
 import com.example.entity.JmcomicConfig;
 import com.example.service.BackendBashTaskService;
 import com.example.service.ConfigService;
+import io.smallrye.common.annotation.RunOnVirtualThread;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
@@ -34,6 +35,7 @@ public class ConfigController {
     @Produces(MediaType.APPLICATION_JSON)
     @RolesAllowed({ "User", "Admin" })
     @Path("update")
+    @RunOnVirtualThread
     public ApiResponse update(){
         return backTaskService.updateJmcomic();
     }

@@ -2,6 +2,7 @@ package com.example.controller;
 
 import com.example.entity.ApiResponse;
 import com.example.service.BackendBashTaskService;
+import io.smallrye.common.annotation.RunOnVirtualThread;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
@@ -15,6 +16,7 @@ import java.util.Map;
 
 @Slf4j
 @Path("/api/download")
+@RunOnVirtualThread
 public class DownloadController {
 
     @Inject

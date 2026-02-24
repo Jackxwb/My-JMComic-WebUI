@@ -235,10 +235,6 @@
         </div>
       </el-popover>
     </div>
-
-    <el-icon><CaretBottom /></el-icon>
-    <el-icon><CaretRight /></el-icon>
-    <el-icon><CaretLeft /></el-icon>
   </div>
 </template>
 <script>

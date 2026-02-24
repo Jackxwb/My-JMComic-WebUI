@@ -113,7 +113,8 @@ public class FileUtil {
 
         return 0;*/
         //return compare_v0(n1, n2);
-        return compare_v1(n1, n2);
+        //return compare_v1(n1, n2);
+        return compare_v2(n1, n2);
     }
     /*private static int compare_v0(String n1, String n2){
         char[] c1 = n1.toCharArray();
@@ -236,6 +237,68 @@ public class FileUtil {
         String tmp = num + "" + Character.getNumericValue(str);
         return Integer.valueOf(tmp);
     }
+
+    // Ai 优化 --- start ---
+    public static int compare_v2(String s1, String s2) {
+        if (s1 == null || s2 == null) return s1 == s2 ? 0 : (s1 == null ? -1 : 1);
+
+        int i = 0, j = 0;
+        while (i < s1.length() && j < s2.length()) {
+            char c1 = s1.charAt(i);
+            char c2 = s2.charAt(j);
+
+            // 如果两个都是数字，进入数字比较模式
+            if (isDigit(c1) && isDigit(c2)) {
+                int result = compareNumbers(s1, i, s2, j);
+                if (result != 0) return result;
+
+                // 跳过已比较的数字部分
+                i = skipDigits(s1, i);
+                j = skipDigits(s2, j);
+            } else {
+                if (c1 != c2) return c1 - c2;
+                i++;
+                j++;
+            }
+        }
+        return s1.length() - s2.length();
+    }
+    private static boolean isDigit(char c) {
+        return c >= '0' && c <= '9';
+    }
+    private static int compareNumbers(String s1, int i, String s2, int j) {
+        // 方案：为了防止 BigInteger 带来的性能损耗，先比较有效位长度，再比较数值
+        int iStart = i;
+        int jStart = j;
+
+        // 跳过前导零（可选，根据业务逻辑决定是否 01 == 1）
+        while (i < s1.length() && s1.charAt(i) == '0') i++;
+        while (j < s2.length() && s2.charAt(j) == '0') j++;
+
+        int iEnd = skipDigits(s1, i);
+        int jEnd = skipDigits(s2, j);
+
+        int len1 = iEnd - i;
+        int len2 = jEnd - j;
+
+        // 长度不同，长的数值大
+        if (len1 != len2) return len1 - len2;
+
+        // 长度相同，按字符逐位比较（等同于数值比较）
+        for (; i < iEnd; i++, j++) {
+            if (s1.charAt(i) != s2.charAt(j)) {
+                return s1.charAt(i) - s2.charAt(j);
+            }
+        }
+
+        // 如果数值相等但前导零数量不同
+        return (iEnd - iStart) - (jEnd - jStart);
+    }
+    private static int skipDigits(String s, int index) {
+        while (index < s.length() && isDigit(s.charAt(index))) index++;
+        return index;
+    }
+    // Ai 优化 --- end ---
 
     public static String readFile(File file, Long reLen, String charsetName){
         StringBuffer re = new StringBuffer();
