@@ -6,6 +6,9 @@
   grid-gap: 1rem;
   gap: 1rem;
 
+  min-height: 0;
+  /*height: 100vh;*/
+
   /*overflow-y: scroll;*/
   /*padding-bottom: 2rem;
   height: 0;
@@ -16,8 +19,19 @@
   /*max-height: calc(var(--pHeight) - 200px + 1.5rem);*/
   /*padding: 1rem 0;*/
 
+  .VirtualWaterfall, .vList{
+    width: 100%;
+    min-height: 1px;
+  }
+
+  /* 浏览器原生虚拟化，不需要父级固定高度 */
+  content-visibility: auto;
+  contain-intrinsic-size: 260px 300px;
+  /* 浏览器原生虚拟化，不需要父级固定高度 */
+
   .fileItem{
-    width: 240px;
+    /*width: 240px;*/
+    min-width: 240px;
 
     .fileTitle{
       width: 100%;

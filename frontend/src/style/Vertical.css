@@ -1,11 +1,12 @@
 .Vertical .title .headTitle {
   display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 .Vertical .title .headTitle > .el-text.el-tooltip__trigger {
   flex-grow: 1;
   text-align: center;
-  max-width: calc(100vw - 216px - 1rem);
-  margin: 0 0.5rem;
+  /*max-width: calc(100vw - 216px - 1rem);*/
 }
 .Vertical .fileFastMark .fileItem .fileItemELink {
   width: 100%;
@@ -13,10 +14,14 @@
 .Vertical .VerticalImageBox {
   display: flex;
   flex-direction: column;
-  overflow-y: scroll;
+  /*overflow-y: scroll;*/
+  content-visibility: auto;
+  contain: size layout style;
+  height: 100vh;
+  height: 100svh;
 }
 .Vertical .VerticalImageBox .el-image, .Vertical .VerticalImageBox .T-Img {
-  margin: 0 2rem;
+  margin: 0 20px;
   min-height: 2rem;
   flex-shrink: 0;
 }
@@ -30,13 +35,24 @@
   height: auto;
 }
 .Vertical .VerticalImageBox.horizontal .el-image, .Vertical .VerticalImageBox.horizontal .T-Img {
-  margin: 2rem 0;
+  margin: 20px 0;
+  height: calc(100% - 40px);
 }
 .Vertical .VerticalImageBox.lTor {
   flex-direction: row;
 }
 .Vertical .VerticalImageBox.rTol {
-  flex-direction: row-reverse;
+  /*flex-direction: row-reverse;*/
+  flex-direction: row;
+}
+.Vertical .VerticalImageBox.rTol .virtual-scroller {
+  transform: scaleX(-1);
+}
+.Vertical .VerticalImageBox.rTol .T-Img {
+  transform: scaleX(-1);
+}
+.Vertical .VerticalImageBox.rTol.disableVirtual {
+  transform: scaleX(-1);
 }
 .Vertical .bottom {
   display: flex;

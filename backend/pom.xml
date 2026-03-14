@@ -12,7 +12,8 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
         <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
-        <quarkus.platform.version>3.23.4</quarkus.platform.version>
+        <!--<quarkus.platform.version>3.23.4</quarkus.platform.version>-->
+        <quarkus.platform.version>3.32.1</quarkus.platform.version>
         <skipITs>true</skipITs>
         <surefire-plugin.version>3.5.3</surefire-plugin.version>
         <jjwt.version>0.12.6</jjwt.version>
@@ -112,11 +113,11 @@
 
         <!-- YAML 读写 -->
         <!-- https://mvnrepository.com/artifact/org.yaml/snakeyaml -->
-        <dependency>
+        <!--<dependency>
             <groupId>org.yaml</groupId>
             <artifactId>snakeyaml</artifactId>
             <version>2.4</version>
-        </dependency>
+        </dependency>-->
 
         <!-- jwt 生成 -->
         <dependency>
@@ -186,6 +187,27 @@
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
             <version>2.19.0</version>
+        </dependency>
+
+        <!-- 读取图片信息 -->
+        <dependency>
+            <groupId>com.drewnoakes</groupId>
+            <artifactId>metadata-extractor</artifactId>
+            <version>2.19.0</version>
+        </dependency>
+        <!-- 保注释读写配置 -->
+        <!--<dependency>
+            <groupId>org.snakeyaml</groupId>
+            <artifactId>snakeyaml-engine</artifactId>
+            <version>2.7</version>
+        </dependency>-->
+        <dependency>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-yaml</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-jackson</artifactId>
         </dependency>
     </dependencies>
 

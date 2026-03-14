@@ -1,14 +1,14 @@
 <template>
   <div class="config">
     <el-button-group>
-      <el-button plain disabled>读取</el-button>
-      <el-button plain disabled>保存</el-button>
+      <el-button plain @click="readJMConfig">读取</el-button>
+      <el-button plain @click="saveJMConfig">保存</el-button>
       <el-button plain @click="updateJM">更新JMComic下载库</el-button>
       <el-drawer
           v-model="openJM"
           title="更新 Jmcomic Python库"
           direction="rtl"
-          size="50%"
+          :size="dSize"
       >
         <div class="line gap-row">
           <el-tag type="primary" v-if="updateJMTask?.running">更新中</el-tag>
@@ -19,7 +19,7 @@
       </el-drawer>
 
       <el-button plain @click="openTestWindow_()">测试</el-button>
-      <el-drawer v-model="openTestWindow" title="运行测试指令" size="50%" >
+      <el-drawer v-model="openTestWindow" title="运行测试指令" :size="dSize" >
         <el-alert type="warning" :closable="false">
           <p>此功能仅面对开发者</p>
           <p>此功能可运行主机上任意命令，小白请不要使用，以免造成数据损失！</p>
@@ -50,7 +50,7 @@
     <el-form class="configForm" :model="configEntity" label-width="auto">
       <el-divider content-position="left"><div class="gap-row">
           <el-text>客户端设置</el-text>
-          <el-switch v-model="configEnable.enableClient" disabled />
+          <el-switch v-model="configEnable.enableClient" />
       </div></el-divider>
       <el-form-item label="客户端">
         <el-radio-group v-model="configEntity.client.impl" :disabled="!configEnable.enableClient">
@@ -60,11 +60,11 @@
       </el-form-item>
       <el-divider content-position="left"><div class="gap-row">
         <el-text>域名设置</el-text>
-        <el-switch v-model="configEnable.enableDomain" disabled />
+        <el-switch v-model="configEnable.enableDomain" />
       </div></el-divider>
       <el-form-item label="网页端域名配置">
         <el-select
-            v-model="configEntity.domain.html"
+            v-model="configEntity.client.domain.html"
             multiple
             filterable
             allow-create
@@ -75,7 +75,7 @@
       </el-form-item>
       <el-form-item label="APP端域名配置">
         <el-select
-            v-model="configEntity.domain.api"
+            v-model="configEntity.client.domain.api"
             multiple
             filterable
             allow-create
@@ -86,21 +86,21 @@
       </el-form-item>
       <el-divider content-position="left"><div class="gap-row">
         <el-text>配置请求</el-text>
-        <el-switch v-model="configEnable.enablePostman" disabled />
+        <el-switch v-model="configEnable.enablePostman" />
       </div></el-divider>
       <el-form-item label="代理设置">
-        <el-select allow-create filterable v-model="configEntity.postman.meta_data.proxies" :disabled="!configEnable.enablePostman" >
+        <el-select allow-create filterable default-first-option clearable v-model="configEntity.client.postman.meta_data.proxies" :disabled="!configEnable.enablePostman" >
           <el-option key="null" label="null" value="null" />
           <el-option key="clash" label="clash" value="clash" />
           <el-option key="v2ray" label="v2ray" value="v2ray" />
         </el-select>
       </el-form-item>
       <el-form-item label="Cookies">
-        <el-input v-model="configEntity.postman.meta_data.cookies.AVS" :disabled="!configEnable.enablePostman" />
+        <el-input v-model="configEntity.client.postman.meta_data.cookies.AVS" clearable :disabled="!configEnable.enablePostman" />
       </el-form-item>
       <el-divider content-position="left"><div class="gap-row">
         <el-text>下载配置</el-text>
-        <el-switch v-model="configEnable.enableDownload" disabled />
+        <el-switch v-model="configEnable.enableDownload" />
       </div></el-divider>
       <el-form-item label="跳过已下载">
         <el-switch v-model="configEntity.download.cache" :disabled="!configEnable.enableDownload" />
@@ -109,8 +109,9 @@
         <el-switch v-model="configEntity.download.image.decode" :disabled="!configEnable.enableDownload" />
       </el-form-item>
       <el-form-item label="自动转换格式">
-        <el-select allow-create filterable v-model="configEntity.download.image.suffix" :disabled="!configEnable.enableDownload" >
-          <el-option key=".jpg" label=".jpg" value=".jpg" />
+        <el-select allow-create filterable v-model="configEntity.download.image.suffix" :disabled="!configEnable.enableDownload"
+                   :options="['null','.jpg','.png'].map(item=>{return{id:item, label:item, value:item }})"
+        >
         </el-select>
       </el-form-item>
       <el-form-item label="同时下载的图片数">
@@ -160,6 +161,17 @@ export default {
   props: {
     // inData: Object,
   },
+  computed: {
+    dSize(){
+      switch (this.$store.state.showMode) {
+        case "pc":
+          return "50%"
+        case "phone":
+        case "smailPhone":
+          return "100%"
+      }
+    },
+  },
   data() {
     return {
       //双向绑定处理
@@ -180,21 +192,21 @@ export default {
 
       configEntity:{
         client:{
-          impl: "html"
-        },
-        domain:{
-          html:[],
-          api:[],
-        },
-        retry_times: 5,
-        postman:{
-          meta_data:{
-            proxies: "",
-            cookies:{
-              AVS: ""
-            }
+          impl: "html",
+          postman:{
+            meta_data:{
+              proxies: "",
+              cookies:{
+                AVS: ""
+              }
+            },
+          },
+          domain:{
+            html:[],
+            api:[],
           },
         },
+        retry_times: 5,
         download:{
           cache: true,
           image: {
@@ -225,6 +237,82 @@ export default {
   },
   //方法
   methods: {
+    readJMConfig: function () {
+      API.post("/api/config/load").then(res=>{
+        let data = API.isSucess(res);
+        if(data){
+          this.configEntity = Object.assign(this.configEntity, data);
+          console.log("configEntity", data);
+          this.checkNullConfig();
+          API.defaultSuccessFuc();
+        }else {
+          API.showDefErrMessage(res)
+        }
+      })
+    },
+    saveJMConfig: function () {
+      let data = {};
+      // 客户端
+      if(this.configEnable.enableClient){
+        data.client = this.configEntity.client
+      }else{
+        data.client = {}
+        data.client.postman = {}
+        data.client.postman.meta_data = {}
+      }
+      // 域名
+      if(this.configEnable.enableDomain){
+        data.client.domain = this.configEntity.client.domain
+      }
+      // 请求
+      if(this.configEnable.enablePostman){
+        data.client.postman = this.configEntity.client.postman
+      }
+      // 下载
+      if(this.configEnable.enableDownload){
+        data.download = this.configEntity.download;
+      }
+
+      API.post("/api/config/save", data).then(res=>{
+        let data = API.isSucess(res);
+        if(data){
+          //this.configEntity = data;
+          API.defaultSuccessFuc()
+        }else {
+          API.showDefErrMessage(res)
+        }
+      })
+    },
+    checkNullConfig:function () {
+      if(!this.configEntity.client){
+        this.configEntity.client = {}
+      }
+      if(!this.configEntity.client.domain){
+        this.configEntity.client.domain={}
+      }
+      if(!this.configEntity.client.postman){
+        this.configEntity.client.postman={}
+      }
+      if(!this.configEntity.client.postman.meta_data){
+        this.configEntity.client.postman.meta_data={}
+      }
+      if(!this.configEntity.client.postman.meta_data.cookies){
+        this.configEntity.client.postman.meta_data.cookies={}
+      }
+      if(!this.configEntity.download){
+        this.configEntity.download={}
+      }
+      if(!this.configEntity.download.image){
+        this.configEntity.download.image = {}
+      }
+      if(!this.configEntity.download.threading){
+        this.configEntity.download.threading={}
+      }
+      if(!this.configEntity.dir_rule){
+        this.configEntity.dir_rule={}
+      }
+    },
+
     updateJM: function () {
       API.post("/api/config/update").then(res=>{
         let data = API.isSucess(res);

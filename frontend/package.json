@@ -10,14 +10,19 @@
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.1",
+    "@lhlyu/vue-virtual-waterfall": "^1.0.9",
+    "@tanstack/vue-virtual": "^3.13.19",
     "axios": "^1.9.0",
     "element-plus": "^2.11.1",
     "jwt-decode": "^4.0.0",
     "mockjs": "^1.1.0",
     "postcss-viewport-height-correction": "^1.1.1",
+    "virtua": "^0.48.6",
     "vue": "^3.5.13",
     "vue-clipboard3": "^2.0.0",
     "vue-router": "^4.5.1",
+    "vue-virtual-scroller": "2.0.0-beta.8",
+    "vue-waterfall-plugin-next": "^3.0.1",
     "vuex": "^4.1.0"
   },
   "devDependencies": {

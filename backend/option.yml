@@ -7,15 +7,29 @@ client:
   # APP端不限ip兼容性好，网页端限制ip地区但效率高
   #impl: html
   impl: api
+  postman:
+    meta_data:
+      proxies: null
+      cookies:
+        AVS: tn0pd4454omfkf0a3qe1s6ni77
+  retry_times: 5
 
 dir_rule: # 下载路径规则
   base_dir: .\Archive
   rule: Bd_Aname_Pindextitle
 
 download:
+  # 如果要下载的文件在磁盘上已存在，不用再下一遍
+  cache: true
   image:
     decode: true
     suffix: .jpg # 转为jpg格式的图片
+  threading:
+    # 同时下载的图片数
+    # PS: 禁漫网页一次最多请求50张图
+    image: 10
+    # 同时下载的章节数
+    photo: 4
 
 # 插件的配置示例
 plugins:

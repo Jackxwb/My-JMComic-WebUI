@@ -86,16 +86,30 @@ API.showDefErrMessage = function (res, title="Error", showUrl=true, showTime=0) 
 }
 
 API.defaultSuccessFuc = function (res, title="Success", message="操作成功", showUrl=true, showTime=10000) {
-    let data = API.isSucess(res);
-    if(data){
+    if(!res){
         ElNotification({
             title: title,
             message: message,
             type: 'success',
             duration: showTime,
         })
+        return;
+    }
+    let data = API.isSucess(res);
+    if(data){
+        ElNotification({
+            title: title,
+            message: data,
+            type: 'success',
+            duration: showTime,
+        })
     }else{
-        API.showDefErrMessage(res)
+        ElNotification({
+            title: title,
+            message: message,
+            type: 'success',
+            duration: showTime,
+        })
     }
 }
 

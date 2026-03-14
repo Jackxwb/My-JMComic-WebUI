@@ -3,6 +3,7 @@ package com.example.service.BackendBashTask;
 import com.example.entity.FileItem;
 import com.example.entity.FixedSizeQueue;
 import com.example.service.BackDATABASETask;
+import com.example.util.StringUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkus.runtime.annotations.RegisterForReflection;
@@ -13,7 +14,9 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -67,11 +70,12 @@ public class DownloadJMComic extends BaseBackendBashTask {
 
     private static final Pattern c = Pattern.compile("标题:(.*), 关键词:(.*)$");
     @Override
-    @Transactional
+    //@Transactional
     @ActivateRequestContext
     public void logHook(String logLine) {
 //        super.logHook(logLine);
         logLastNLine.add(logLine);
+        boolean addTagInfo = false;
         if(name==null){
             Matcher m = c.matcher(logLine);
             if(m.find()){
@@ -82,7 +86,8 @@ public class DownloadJMComic extends BaseBackendBashTask {
                     tagArr = tagArr.replaceAll("'","\"");
                     tags = mapper.readValue(tagArr, String[].class);
                     log.info("本子名字: {}", name);
-                    log.info("本子标签: {}", tags);
+                    log.info("本子标签: {}", Arrays.toString(tags));
+                    addTagInfo = true;
                 } catch (JsonProcessingException e) {
                     log.error("tag数组解析异常:[{}] {}", tagArr, e.getMessage());
                     //throw new RuntimeException(e);
@@ -132,15 +137,17 @@ public class DownloadJMComic extends BaseBackendBashTask {
                 savePath = FileItem.AutomaticProcessingPath(savePath);
                 log.info("保存目录(转换后)：{}", savePath);
 
-                try {
-                    /*CompletableFuture.runAsync(()->{ // 开启数据库事务
+                /*try {
+                    *//*CompletableFuture.runAsync(()->{ // 开启数据库事务
                         FileItem fileItem = FileItem.getFormPath(savePath);
                         fileItem.aid = String.valueOf(a_id);
                         fileItem.persistAndFlush();
                         log.info("{} > [{}]", fileItem.path, fileItem.aid);
-                    });*/
+                    });*//*
                     FileItem fileItem = FileItem.getFormPath(savePath);
-                    fileItem.aid = String.valueOf(a_id);
+                    if(StringUtil.isNull(fileItem.aid)){
+                        fileItem.aid = String.valueOf(a_id);
+                    }
                     if(tags!=null){
                         fileItem.addMark(tags);
                     }
@@ -165,7 +172,10 @@ public class DownloadJMComic extends BaseBackendBashTask {
                     //throw new RuntimeException(e);
                     log.error("关联下载目录失败! {}", e.getMessage());
                     e.printStackTrace();
-                }
+                }*/
+                updateDataBase("获取路径触发更新");
+            }else if (addTagInfo || StringUtil.notNull(name)){
+                log.warn("已获取本子资料，但未能定位到找到本子根目录，等待本子路径出现");
             }
 
             /*
@@ -223,6 +233,8 @@ public class DownloadJMComic extends BaseBackendBashTask {
                 }
             }
             */
+        } else if (addTagInfo) {// 只有在先获取了路径，后得到tag时才触发更新。正常流程不会触发此处
+            updateDataBase("获取Tag触发更新");
         }
 
         //System.out.printf(">%d> %s\r\n", getPid(), logLine);
@@ -238,6 +250,23 @@ public class DownloadJMComic extends BaseBackendBashTask {
             System.out.printf(">%d> %s\r\n", getPid(), logLine);
         }
 //        log.info(">{}> {}",getPid(), logLine);
+    }
+
+    private void updateDataBase(String mark){
+        try {
+            FileItem fileItem = FileItem.getFormPath(savePath);
+            if(StringUtil.isNull(fileItem.aid)){
+                fileItem.aid = String.valueOf(a_id);
+            }
+            if(tags!=null){
+                fileItem.addMark(tags);
+            }
+            BackDATABASETask.addSaveTask(fileItem);
+            log.info("更新路径数据 {} > [{}] > [{}] | [{}]", fileItem.path, fileItem.aid, tags, mark);
+        } catch (Exception e) {
+            log.error("关联下载目录失败! {}, | [{}]", e.getMessage(), mark);
+            e.printStackTrace();
+        }
     }
 
     @Override

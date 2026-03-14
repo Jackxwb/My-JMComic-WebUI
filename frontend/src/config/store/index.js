@@ -8,10 +8,23 @@ export default createStore({
     state: {
         javaUrl: "/api/",
         // loginUser: null,
+        showMode: "pc",
     },
     //里面定义方法，操作state方法
     //更改 Vuex 的 store 中的状态的唯一方法是提交 mutation。Vuex 中的 mutation 非常类似于事件：每个 mutation 都有一个字符串的事件类型 (type)和一个回调函数 (handler)。这个回调函数就是我们实际进行状态更改的地方，并且它会接受 state 作为第一个参数：
     mutations: {
+        reSizeWindow: function (state) {
+            let width = window.innerWidth;
+            let w1= 720;
+            let w2= 450;
+            if(width>w1){
+                state.showMode = "pc"
+            }else if(width<=w1 && width>w2){
+                state.showMode = "phone"
+            }else{
+                state.showMode = "smailPhone"
+            }
+        }
     },
     // 操作异步操作mutation
     //Action和Mutation相似，一般不用Mutation 异步操作，若要进行异步操作，使用Action

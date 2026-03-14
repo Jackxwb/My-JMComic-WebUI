@@ -17,8 +17,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -30,6 +29,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
 import java.util.Map;
 
@@ -92,7 +92,7 @@ public class LibraryController {
 
     @POST
     @Produces(MediaType.APPLICATION_JSON)
-    @Transactional
+    //@Transactional
     //@JwtSecured(roles = {"User", "Admin"})
     @RolesAllowed({ "User", "Admin" })
     public ApiResponse listFile(@Valid Map<String, String> json){
@@ -116,26 +116,31 @@ public class LibraryController {
             path = getPath();
         }
 
-        File file = new File(path);
-        if(!file.exists()){
+        java.nio.file.Path path_ = java.nio.file.Path.of(path);
+        if(!Files.exists(path_)){
             return ApiResponse.returnFail("路径不存在");
         }
-        if(file.isFile()){
-            return ApiResponse.returnFail("非法的路径");
+        boolean isDirectory = Files.isDirectory(path_);
+        boolean isRegularFile = Files.isRegularFile(path_);
+        if(!isDirectory || isRegularFile){
+            return ApiResponse.returnFail("非法的路径{"+isDirectory+","+isRegularFile+"}");
         }
+        boolean isReadable = Files.isReadable(path_);
+        boolean isWritable = Files.isWritable(path_);
+        boolean isExecutable = Files.isExecutable(path_);
 
-        if(!file.canRead() || !file.canWrite() || !file.canExecute()){
-            log.warn("权限异常: canRead: {}, canWrite: {}, canExecute: {}, <- {}"
-                    ,file.canRead()
-                    ,file.canWrite()
-                    ,file.canExecute()
-                    ,path
+        if (!isReadable || !isWritable || !isExecutable) {
+            log.warn("权限异常: canRead: {}, canWrite: {}, canExecute: {}, <- {}",
+                    isReadable,
+                    isWritable,
+                    isExecutable,
+                    path
             );
         }
 
         List<FileItem> fileItems = libraryService.listFile(path);
 
-        String parent = file.getParent();
+        String parent = path_.getParent().toAbsolutePath().toString();
         parent = FileItem.AutomaticProcessingPath(parent);
         ParentResult data = new ParentResult();
         data.nowPathFileItems = fileItems;
@@ -218,7 +223,7 @@ public class LibraryController {
 
     @POST
     @Produces(MediaType.APPLICATION_JSON)
-    @Transactional
+    //@Transactional
     @Path("parent")
     @RolesAllowed({ "User", "Admin" })
     public ApiResponse getParentInfo(@Valid Map<String, String> json){
@@ -270,14 +275,16 @@ public class LibraryController {
             return ApiResponse.returnFail("参数异常");
         }
 
-        FileItem.getFormPath(data.path).updateData(data);
+        FileItem fileItem = FileItem.getFormPath(data.path).updateData(data);
+
+        entityManager.merge(fileItem);
 
         return ApiResponse.returnOK();
     }
 
     @POST
     @Produces(MediaType.APPLICATION_JSON)
-    @Transactional
+    //@Transactional
     @Path("refresh")
     @RolesAllowed({ "User", "Admin" })
     public ApiResponse refresh(@Valid Map<String, String> json){
@@ -297,11 +304,11 @@ public class LibraryController {
 
     @GET
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    @Transactional
+    //@Transactional
     @Path("img")
     //@RolesAllowed({ "User", "Admin" })
     @PermitAll
-    public Response openImage(@QueryParam("img") String path){// , @QueryParam("token") String token
+    public Response openImage(@Context Request request, @QueryParam("img") String path){// , @QueryParam("token") String token
         path = URLDecoder.decode(path, Charset.forName("UTF-8"));
         if(path==null){
             log.warn("路径不存在：{}", path);
@@ -318,39 +325,53 @@ public class LibraryController {
 
         // 构建图片文件的完整路径
         java.nio.file.Path imagePath = Paths.get(path);
-        File imageFile = imagePath.toFile();
-
-        log.debug("file: exists={}, isFile={}, canRead={}, canWrite={}",
-                imageFile.exists(), imageFile.isFile(),
-                imageFile.canRead(), imageFile.canWrite()
-        );
-
-        if(!imageFile.canRead()){
-            log.warn("权限异常: [canRead: {}] {}", imageFile.canRead(), path);
-            //return Response.status(Response.Status.FORBIDDEN).entity("权限不足").build();
-        }
-        if (!imageFile.exists() || !imageFile.isFile()) {
-            log.warn("路径异常：{}, exists: {}, isFile: {}", path, imageFile.exists(), imageFile.isFile());
-            return Response.status(Response.Status.NOT_FOUND).entity("Image not found: " + path).build();
-        }
-
         try {
-            // 根据文件扩展名确定 Content-Type
+            // 一次性读取所有属性，减少系统调用次数
+            // 如果文件不存在，此处会直接抛出 NoSuchFileException
+            BasicFileAttributes attrs = Files.readAttributes(imagePath, BasicFileAttributes.class);
+
+            // 1. 状态校验
+            if (!attrs.isRegularFile()) {
+                log.warn("路径异常：{} 不是普通文件", path);
+                return Response.status(Response.Status.NOT_FOUND).entity("Not a regular file").build();
+            }
+
+            // 2. 权限校验
+            if (!Files.isReadable(imagePath)) {
+                log.warn("权限异常: [Readable: false] {}", path);
+                return Response.status(Response.Status.FORBIDDEN).entity("Permission denied").build();
+            }
+
+            log.debug("file: size={}, lastModified={}", attrs.size(), attrs.lastModifiedTime());
+
+            // 3. 确定 Content-Type
             String mimeType = Files.probeContentType(imagePath);
             if (mimeType == null) {
-                // 如果无法确定 MIME 类型，默认使用 application/octet-stream
                 mimeType = MediaType.APPLICATION_OCTET_STREAM;
             }
 
-            // 读取文件内容并作为 Response 返回
-            return Response.ok(imageFile, mimeType)
-                    .header("Content-Disposition", "attachment; filename=\"" + imageFile.getName() + "\"") // 可选：添加下载头
-                    .build();
+            // ETag 与 浏览器缓存
+            // 构造实体标签：基于文件大小和最后修改时间的哈希
+            EntityTag etag = new EntityTag(Integer.toHexString(
+                    (imagePath.toString() + "/" + attrs.lastModifiedTime()).hashCode()));
+            // 检查客户端缓存是否有效 (If-None-Match)
+            Response.ResponseBuilder builder = request.evaluatePreconditions(etag);
+            if (builder != null) {
+                // 返回 304 Not Modified，不传输任何字节，速度最快
+                return builder.build();
+            }
 
+            // 4. 返回响应
+            return Response.ok(imagePath.toFile(), mimeType)
+                    .tag(etag)
+                    .header("Content-Disposition", "attachment; filename=\"" + imagePath.getFileName().toString() + "\"")
+                    .build();
+        } catch (java.nio.file.NoSuchFileException e) {
+            log.warn("路径不存在: {}", path);
+            return Response.status(Response.Status.NOT_FOUND).entity("Image not found").build();
         } catch (IOException e) {
-            e.printStackTrace();
-            log.error("未知异常: {}, {}", path, e.getMessage());
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Error reading image: " + e.getMessage()).build();
+            log.error("读取异常: {}, {}", path, e.getMessage());
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
         }
     }
 
@@ -379,11 +400,11 @@ public class LibraryController {
         }
         boolean isDelete = pFile.delete();
         if (isDelete){
-            return ApiResponse.returnOK();
+            return ApiResponse.returnOK().setDataNow(FileItem.delete("path", p.toAbsolutePath().toString()));
         }else{
             try {
                 Files.delete(p);
-                return ApiResponse.returnOK();
+                return ApiResponse.returnOK().setDataNow(FileItem.delete("path", p.toAbsolutePath().toString()));
             } catch (IOException e) {
                 //throw new RuntimeException(e);
 //                e.printStackTrace();
@@ -392,7 +413,7 @@ public class LibraryController {
 
             try {
                 FileUtils.delete(pFile);
-                return ApiResponse.returnOK();
+                return ApiResponse.returnOK().setDataNow(FileItem.delete("path", p.toAbsolutePath().toString()));
             } catch (IOException e) {
 //                e.printStackTrace();
                 log.warn("org.apache.commons.io.FileUtils.delete 删除失败: {}", e.getMessage());
@@ -400,7 +421,7 @@ public class LibraryController {
 
             try {
                 FileUtils.deleteDirectory(pFile);
-                return ApiResponse.returnOK();
+                return ApiResponse.returnOK().setDataNow(FileItem.delete("path", p.toAbsolutePath().toString()));
             } catch (IOException e) {
 //                e.printStackTrace();
                 log.warn("org.apache.commons.io.FileUtils.deleteDirectory 删除失败: {}", e.getMessage());
@@ -408,7 +429,7 @@ public class LibraryController {
 
             try {
                 FileUtils.forceDelete(pFile);
-                return ApiResponse.returnOK();
+                return ApiResponse.returnOK().setDataNow(FileItem.delete("path", p.toAbsolutePath().toString()));
             } catch (IOException e) {
 //                e.printStackTrace();
                 log.warn("org.apache.commons.io.FileUtils.forceDelete 删除失败: {}", e.getMessage());
@@ -430,7 +451,7 @@ public class LibraryController {
 
     @POST
     @Produces(MediaType.APPLICATION_JSON)
-    @Transactional
+    //@Transactional
     @Path("favorites/list")
     @RolesAllowed({ "User", "Admin" })
     public ApiResponse listFavorites(){

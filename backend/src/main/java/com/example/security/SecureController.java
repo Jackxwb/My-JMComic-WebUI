@@ -4,6 +4,7 @@ import com.example.entity.ApiResponse;
 import com.example.entity.User;
 import com.example.util.FileUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.smallrye.common.annotation.RunOnVirtualThread;
 import io.smallrye.jwt.build.Jwt;
 import io.smallrye.jwt.build.JwtSignatureException;
 import io.vertx.ext.web.RoutingContext;
@@ -31,6 +32,7 @@ import java.util.*;
 @Slf4j
 @Path("/secure/")
 @PermitAll
+@RunOnVirtualThread
 public class SecureController {
 
     @Inject
@@ -53,7 +55,7 @@ public class SecureController {
     private PublicKey publicPem;
 
     @POST
-    @Transactional
+    //@Transactional
     @Consumes(MediaType.APPLICATION_JSON)//接受JSON数据
     @Produces(MediaType.APPLICATION_JSON)//返回JSON数据
     @Path("login")
@@ -118,7 +120,7 @@ public class SecureController {
     }
 
     @POST
-    @Transactional
+    //@Transactional//不修改数据库不要开启事务
     @Produces(MediaType.APPLICATION_JSON)
     @Path("check")
     @PermitAll
@@ -129,14 +131,18 @@ public class SecureController {
         }
 
         if(publicPem==null){
-            if(publicPemFilePath==null){
-                return ApiResponse.returnFail("配置异常，无法读取公钥!");
-            }
-            try {
-                initKey();
-            } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
-                //throw new RuntimeException(e);
-                return ApiResponse.returnFail("密钥初始化失败: "+ e.getMessage());
+            synchronized(this) { // 或者更细粒度的锁
+                if(publicPem==null){
+                    if(publicPemFilePath==null){
+                        return ApiResponse.returnFail("配置异常，无法读取公钥!");
+                    }
+                    try {
+                        initKey();
+                    } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+                        //throw new RuntimeException(e);
+                        return ApiResponse.returnFail("密钥初始化失败: "+ e.getMessage());
+                    }
+                }
             }
         }
         if( TokenManage.check(jwt, token) ){

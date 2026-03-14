@@ -37,6 +37,7 @@ export default {
   methods: {
     upPageSize: function (env) {
       //console.log("upPageSize", env)
+      /*
       let width = window.innerWidth;
       let w1= 720;
       let w2= 450;
@@ -46,6 +47,20 @@ export default {
         this.clazz = ["box", "phone"]
       }else{
         this.clazz = ["box", "smallPhone"]
+      }
+      */
+      this.$store.commit("reSizeWindow")
+      // console.log("this.$store", this.$store, this.$store.state)
+      switch (this.$store.state.showMode) {
+        case "pc":
+          this.clazz = ["box"]
+          break;
+        case "phone":
+          this.clazz = ["box", "phone"]
+          break;
+        case "smailPhone":
+          this.clazz = ["box", "smallPhone"]
+          break;
       }
     }
   },

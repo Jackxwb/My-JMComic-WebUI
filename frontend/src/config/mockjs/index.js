@@ -13,10 +13,10 @@ import downloadList from "./json/download_list.json"
 import tagList from "./json/tag_list.json"
 import favorites_list from "./json/favorites_list.json"
 
-if(process.env.NODE_ENV === "development") {
+if(process.env.NODE_ENV === "development" && false) {
 
-    Mock.mock("/api/library/", library_list);
-    // Mock.mock("/api/library/", library_list_file);
+    // Mock.mock("/api/library/", library_list);
+    Mock.mock("/api/library/", library_list_file);
 
     // Mock.mock("/api/library/img", (options) => {
     //     console.log("Mock.mock", "/api/library/img", options);
@@ -46,4 +46,6 @@ if(process.env.NODE_ENV === "development") {
     Mock.mock("/api/download", downloadList);
     Mock.mock("/api/tag/", tagList);
     Mock.mock("/api/library/favorites/list", favorites_list);
+
+
 }

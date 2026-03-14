@@ -13,6 +13,7 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 @Slf4j
@@ -22,7 +23,8 @@ public class TokenManage {
     @ConfigProperty(name = "setting.jwt.expiration", defaultValue = "86400")
     private long ExpirationDate;
 
-    private static final Set<String> onlineToken = new CopyOnWriteArraySet<>();
+    //private static final Set<String> onlineToken = new CopyOnWriteArraySet<>();
+    private static final Set<String> onlineToken = ConcurrentHashMap.newKeySet();
 
     public static void addToken(String token){
         onlineToken.add(token);

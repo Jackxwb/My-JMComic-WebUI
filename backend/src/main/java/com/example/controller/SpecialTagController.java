@@ -30,7 +30,7 @@ public class SpecialTagController {
 
     @POST
     @Produces(MediaType.APPLICATION_JSON)
-    @Transactional
+    //@Transactional
     @RolesAllowed({ "User", "Admin" })
     public ApiResponse listSpecialTag(){
         List<SpecialTag> result = SpecialTag.listAll();

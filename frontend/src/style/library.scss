@@ -50,9 +50,13 @@
   }
 
   .fileView{
-    overflow-y: scroll;
-    max-height: calc(100vh - 200px + 1.5rem);
-    max-height: calc(100svh - 200px + 1.5rem);
+    height: 100%;
+    /*overflow-y: scroll;*/
+    /*max-height: calc(100vh - 200px + 1.5rem);
+    max-height: calc(100svh - 200px + 1.5rem);*/
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
     /*
     display: flex;
     grid-gap: 0.5rem;
@@ -61,16 +65,19 @@
     */
     .fastFileFilter{
       margin-bottom: 0.5rem;
+      margin-right: auto;
     }
   }
   .ListCard{
     /*max-height: calc(100vh - 200px + 1.5rem);
     max-height: calc(100svh - 200px + 1.5rem);*/
+    height: 100%;
   }
   .groupView{
     /*overflow-y: scroll;*/
     /*max-height: calc(100vh - 200px + 1.5rem);
     max-height: calc(100svh - 200px + 1.5rem);*/
+    flex-grow: 1;
 
     .ListCard{
       overflow-y: inherit;
@@ -78,6 +85,7 @@
     }
 
     .groupFileView{
+
       .title{
         position: sticky;
         /*top: 1rem;*/

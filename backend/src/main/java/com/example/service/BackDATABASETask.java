@@ -2,6 +2,7 @@ package com.example.service;
 
 import com.example.entity.FileItem;
 import io.quarkus.scheduler.Scheduled;
+import io.smallrye.common.annotation.RunOnVirtualThread;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.inject.Inject;
@@ -20,9 +21,13 @@ public class BackDATABASETask {
     @Inject
     EntityManager entityManager;
 
-    @Scheduled(cron = "0/3 * * * * ?") // 每 3 秒执行一次
+    @Scheduled(
+            cron = "0/3 * * * * ?", // 每 3 秒执行一次
+            concurrentExecution = Scheduled.ConcurrentExecution.SKIP // 禁止并发执行（默认 PROCEED 继续执行，需显式设为SKIP）
+    )
     @Transactional
     @ActivateRequestContext
+    @RunOnVirtualThread
     public void cronTask() {
         while (!task.isEmpty()){
             try {

@@ -3,12 +3,13 @@
 
     .headTitle{
       display: flex;
+      align-items: center;
+      gap: 0.5rem;
 
       &>.el-text.el-tooltip__trigger{
         flex-grow: 1;
         text-align: center;
-        max-width: calc(100vw - 216px - 1rem);
-        margin: 0 0.5rem;
+        /*max-width: calc(100vw - 216px - 1rem);*/
       }
     }
   }
@@ -27,10 +28,14 @@
   .VerticalImageBox{
     display: flex;
     flex-direction: column;
-    overflow-y: scroll;
+    /*overflow-y: scroll;*/
+    content-visibility: auto;
+    contain: size layout style;
+    height: 100vh;
+    height: 100svh;
 
     .el-image, .T-Img{
-      margin: 0 2rem;
+      margin: 0 20px;
       min-height: 2rem;
       flex-shrink: 0;
 
@@ -51,14 +56,25 @@
   }
   .VerticalImageBox.horizontal{
     .el-image,.T-Img{
-      margin: 2rem 0;
+      margin: 20px 0;
+      height: calc(100% - 40px);
     }
   }
   .VerticalImageBox.lTor{
     flex-direction: row;
   }
   .VerticalImageBox.rTol{
-    flex-direction: row-reverse;
+    /*flex-direction: row-reverse;*/
+    flex-direction: row;
+    .virtual-scroller{
+      transform: scaleX(-1);
+    }
+    .T-Img{
+      transform: scaleX(-1);
+    }
+  }
+  .VerticalImageBox.rTol.disableVirtual{
+    transform: scaleX(-1);
   }
 
   .bottom{

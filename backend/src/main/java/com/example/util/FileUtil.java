@@ -1,9 +1,18 @@
 package com.example.util;
 
+import com.drew.imaging.ImageMetadataReader;
+import com.drew.metadata.Directory;
+import com.drew.metadata.Metadata;
+import com.drew.metadata.exif.ExifSubIFDDirectory;
+import com.drew.metadata.jpeg.JpegDirectory;
+import com.drew.metadata.png.PngDirectory;
 import com.example.entity.FileItem;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.*;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
@@ -20,6 +29,18 @@ public class FileUtil {
         }
         return true;
     }
+    public static boolean checkPath(Path path){
+        if(path==null){
+            log.error("文件不存在");
+            return false;
+        }
+        if (!Files.exists(path)){
+            log.error("文件不存在: [{}, {}]", path.toString(), path.toAbsolutePath().toString());
+            return false;
+        }
+        return true;
+    }
+
 
     //private static final String[] fileSuffix = "bmp,jpg,png,tif,gif,pcx,tga,exif,fpx,svg,psd,cdr,pcd,dxf,ufo,eps,ai,raw,wmf,webp,avif,apng".split(",");
     private static final Set<String> fileSuffix = new HashSet<>();
@@ -47,6 +68,16 @@ public class FileUtil {
         }
 
         String name = file.getName();
+        String suffix = getFileNameSuffix(name);
+
+        return fileSuffix.contains(suffix);
+    }
+    public static boolean isFileImage(Path path){
+        if(!checkPath(path)){
+            return false;
+        }
+
+        String name = path.getFileName().toString();
         String suffix = getFileNameSuffix(name);
 
         return fileSuffix.contains(suffix);
@@ -94,6 +125,43 @@ public class FileUtil {
             String oneDir = file.getPath() + File.separator + arr_dir.get(0);
             return findDirImage(new File(oneDir));
         }
+        return null;
+    }
+    public static String findDirImage(Path dirPath) {
+        List<String> subDirs = new ArrayList<>();
+        List<String> imageFiles = new ArrayList<>();
+
+        // 1. 使用 try-with-resources 确保 DirectoryStream 及时关闭句柄
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(dirPath)) {
+            for (Path entry : stream) {
+                String name = entry.getFileName().toString();
+                // 2. 利用 Files.isRegularFile，避免重复系统调用
+                if (Files.isRegularFile(entry)) {
+                    if (isFileImage(entry)) {
+                        imageFiles.add(name);
+                    }
+                } else if (Files.isDirectory(entry)) {
+                    subDirs.add(name);
+                }
+            }
+        } catch (IOException e) {
+            return null;
+        }
+
+        // 3. 处理文件逻辑：如果当前目录下有图片，按自定义排序取第一个
+        if (!imageFiles.isEmpty()) {
+            // 使用 Java 8+ lambda 简化 Comparator
+            imageFiles.sort(FileUtil::compare);
+            return dirPath.resolve(imageFiles.get(0)).toString();
+        }
+
+        // 4. 递归逻辑：如果没图片但有子目录，按排序取第一个子目录继续深度查找
+        if (!subDirs.isEmpty()) {
+            subDirs.sort(FileUtil::compare);
+            Path firstDir = dirPath.resolve(subDirs.get(0));
+            return findDirImage(firstDir); // 递归
+        }
+
         return null;
     }
 
@@ -325,5 +393,65 @@ public class FileUtil {
         }
         reLen = dataLen;
         return re.toString();
+    }
+
+    public record ImageDimension(int width, int height) {
+        public Double ratio(){
+            if(width<=0 || height<=0){
+                return null;
+            }
+            return Double.valueOf(width) / Double.valueOf(height);
+        }
+    }
+    // 定义 metadata-extractor 中通用的长宽 Tag ID
+    private static final int Directory_TAG_WIDTH = 1;  // 多数目录中 1 代表宽度
+    private static final int Directory_TAG_HEIGHT = 3; // 多数目录中 3 代表高度
+    public static ImageDimension getImageDimension(Path imagePath){
+        String mimeType;
+        try {
+            mimeType = Files.probeContentType(imagePath);
+            if(mimeType==null || mimeType.isBlank() || !mimeType.startsWith("image")){
+                log.warn("路径非图片: {}, {}", imagePath, mimeType);
+                return null;
+            }
+        } catch (IOException e) {
+            return null;
+        }
+
+        try (InputStream is = new BufferedInputStream(Files.newInputStream(imagePath))) {
+            Metadata metadata = ImageMetadataReader.readMetadata(is);
+
+            // 针对不同格式的通用处理逻辑
+            int width = 0;
+            int height = 0;
+
+            // 这能自动兼容 JPEG, PNG, GIF, BMP, WebP, TIFF 等
+            for (Directory directory : metadata.getDirectories()) {
+                if (directory.containsTag(Directory_TAG_WIDTH) && directory.containsTag(Directory_TAG_HEIGHT)) {
+                    width = directory.getInt(Directory_TAG_WIDTH);
+                    height = directory.getInt(Directory_TAG_HEIGHT);
+
+                    // 如果成功获取到非零数值，直接跳出
+                    if (width > 0 && height > 0) {
+                        return new ImageDimension(width, height);
+                    }
+                }
+            }
+
+            // 备选方案：从 Exif 信息中获取
+            var exifDir = metadata.getFirstDirectoryOfType(ExifSubIFDDirectory.class);
+            if (exifDir != null) {
+                width = exifDir.getInt(ExifSubIFDDirectory.TAG_EXIF_IMAGE_WIDTH);
+                height = exifDir.getInt(ExifSubIFDDirectory.TAG_EXIF_IMAGE_HEIGHT);
+                if (width > 0 && height > 0) {
+                    return new ImageDimension(width, height);
+                }
+            }
+
+            log.warn("获取图片尺寸失败: {}, {}", imagePath, mimeType);
+        } catch (Exception e) {
+            log.warn("获取图片尺寸出现异常: {}, {}, {}", imagePath, mimeType, e.getMessage());
+        }
+        return null;
     }
 }

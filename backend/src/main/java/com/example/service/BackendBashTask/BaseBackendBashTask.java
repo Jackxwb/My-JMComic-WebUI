@@ -102,8 +102,8 @@ public class BaseBackendBashTask {
         this.command = commandArr.toArray(new String[0]);
     }
 
-    @Transactional
-    @ActivateRequestContext
+    //@Transactional
+    //@ActivateRequestContext
     //@RunOnVirtualThread
     public void startRun() {
         isRunning = true;
@@ -158,8 +158,8 @@ public class BaseBackendBashTask {
     }
 
     public void startHook(){}
-    @Transactional
-    @ActivateRequestContext
+    //@Transactional
+    //@ActivateRequestContext
     public void logHook(String logLine){}
     public void exitHook(int exitCode, String errMessage){
         endTime = System.currentTimeMillis();
@@ -171,8 +171,8 @@ public class BaseBackendBashTask {
             this.errMessage += "\r\n" + errMessage;
         }
     }
-    @Transactional
-    @ActivateRequestContext
+    //@Transactional
+    //@ActivateRequestContext
     private void logPrint(){
         try {
             switch (logMode){

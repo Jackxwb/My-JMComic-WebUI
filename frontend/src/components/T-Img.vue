@@ -4,6 +4,7 @@
 <!--    <el-image v-if="imgBlob" class="eImg" :src="getImgBlob" fit="cover" :lazy="isLazy"/>-->
     <div v-else class="error">
       {{ errorMessage }}
+      <el-button type="warning" @click="getImage(authSrc)">重试</el-button>
     </div>
   </div>
 </template>

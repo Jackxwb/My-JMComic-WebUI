@@ -111,7 +111,8 @@
       </el-drawer>
     </div>
     <el-divider class="smailDivider" />
-    <div class="fileView" :style="styleAuto" >
+    <el-scrollbar>
+      <div class="fileView" :style="styleAuto" >
       <el-segmented v-model="fastFileFilter" :options="fastFileFilterOptions" @change="analyzePath()" :size="showMode==='pc'?'':'small'" class="fastFileFilter" />
       <list-card v-model:in-files="filesFilterResult"
                  v-loading.fullscreen.lock="isLoad"
@@ -121,9 +122,23 @@
                  :maxShowFileTag="maxShowFileTagVal"
                  v-if="setting.fileGroup==='关闭'"
                  :favoritesList="favorites" @refreshFavoritesList="listPath(nowPath)" @delFavorites="delFavorites"
-                 :tagList="tagList"
+                 :tagList="tagList" :useVirtual="true"
       />
       <div class="groupView" :style="styleAuto">
+<!--        <VList class="groupFileView" :data="groupFiles" #default="{ item, index }" v-if="setting.fileGroup!=='关闭'">
+          <div class="title">
+            <el-divider content-position="left">{{ item.name }}</el-divider>
+          </div>
+          <list-card v-model:in-files="item.files"
+                     v-loading.fullscreen.lock="isLoad"
+                     @updateData="updateFileItem" @openPath="listPath"
+                     @openView="openImage" @delFile="delFilePath"
+                     :inTags="tagOptions.out"
+                     :maxShowFileTag="maxShowFileTagVal"
+                     :favoritesList="favorites" @refreshFavoritesList="listPath(nowPath)" @delFavorites="delFavorites"
+                     :tagList="tagList"
+          />
+        </VList>-->
         <div class="groupFileView" v-for="(item,i) in groupFiles" :key="i" v-if="setting.fileGroup!=='关闭'">
           <div class="title">
             <el-divider content-position="left">{{ item.name }}</el-divider>
@@ -140,16 +155,17 @@
         </div>
       </div>
     </div>
+    </el-scrollbar>
     <div class="imageView" v-if="viewImage">
       <vertical v-model:inData="filterFiles" v-model:inSwitchView="viewImage"
                 :setDirection="setting.direction" :fileIndex="fileIndex"
                 :faFile="faFile" :faFileIndex="faFileIndex"
                 @openBeforePath="openBeforePath" @openNextPath="openNextPath"
-                @switchPath="listPath" @updateData="updateFileItem"
+                @switchPath="listPath" @updateData="updateFileItem" :showMode="showMode"
       />
     </div>
     <el-empty v-if="filesFilterResult==null || filesFilterResult.length===0" :description="loadEmptyText" />
-    <div class="grow1"></div>
+<!--    <div class="grow1"></div>-->
 
     <!-- el-divider content-position="left" -->
     <div class="statusBottomBar">
@@ -244,6 +260,7 @@ import ListCard from "@/components/library/ListCard.vue";
 import Vertical from "@/components/image/Vertical.vue";
 import ArraySortUtil from "@/utils/ArraySortUtil.js";
 import {Hide, View, CaretBottom, CaretRight, CaretLeft} from "@element-plus/icons-vue";
+// import { RecycleScroller } from 'vue-virtual-scroller'
 
 export default {
   name: "library",
@@ -253,10 +270,12 @@ export default {
     },
     View() {
       return View
-    }
+    },
   },
   //引入模块
-  components: {CaretLeft, CaretRight, CaretBottom, Vertical, ListCard},
+  components: {CaretLeft, CaretRight, CaretBottom, Vertical, ListCard
+    // , RecycleScroller
+  },
   //父级传入数据
   props: {
     // inData: Object,

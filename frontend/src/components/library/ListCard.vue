@@ -1,5 +1,5 @@
 <template>
-  <div class="ListCard">
+  <div class="ListCard" ref="Box">
 
 <!--    <el-segmented v-model="showMode" :options="['原生','授权']" size="small" />-->
 
@@ -157,7 +157,7 @@
       </template>
     </Waterfall>-->
 
-      <VirtualWaterfall
+<!--      <VirtualWaterfall
           class="VirtualWaterfall"
           :items="files"
           :calcItemHeight="calcItemHeight"
@@ -166,11 +166,11 @@
           <template #default="{ item }">
             <el-card :class="item.isSeen?['fileItem','isSeen']:['fileItem']"
                      :shadow="item.isSeen?'never':'always'" :ref="item.path"
-            ><!-- v-for="(item,i) in files" :key="i" -->
+            >&lt;!&ndash; v-for="(item,i) in files" :key="i" &ndash;&gt;
               <template #header>
                 <el-text line-clamp="3" class="fileTitle">{{ item.name }}</el-text>
               </template>
-              <!--      {{ encodeURI('/api/library/img?img=' + item.image) }}-->
+              &lt;!&ndash;      {{ encodeURI('/api/library/img?img=' + item.image) }}&ndash;&gt;
               <el-badge :value="item.subdirectories" type="primary" :is-dot="item.subdirectories<2"
                         class="subdirectories" :max="999" :offset="calculateOffset(item.subdirectories)"
                         v-if="item.isFile===false"
@@ -183,13 +183,13 @@
                       @dblclick="openPath(item.path, item.isFile, i)" @click="openPath(item.path, item.isFile, i)" :is-lazy="true"
                       v-else
                 />
-                <!-- v-else -->
+                &lt;!&ndash; v-else &ndash;&gt;
               </el-badge>
 
-              <!--      <el-image class="fileImage" :src=" encodeURI('/api/library/img?token=' + getToken() + '&img=' + encodeURIComponent(item.image)) " fit="cover"
+              &lt;!&ndash;      <el-image class="fileImage" :src=" encodeURI('/api/library/img?token=' + getToken() + '&img=' + encodeURIComponent(item.image)) " fit="cover"
                               @dblclick="openPath(item.path, item.isFile, i)" @click="openPath(item.path, item.isFile, i)"
                               v-if="showMode==='原生' && item.isFile===true"
-                    />-->
+                    />&ndash;&gt;
               <TImg class="fileImage" :authSrc=" encodeURI('/api/library/img?img=' + encodeURIComponent(item.image)) " fit="cover"
                     @dblclick="openPath(item.path, item.isFile, i)" @click="openPath(item.path, item.isFile, i)" :is-lazy="true"
                     v-if="item.isFile===true"
@@ -240,9 +240,9 @@
                         <span v-else>{{ item }}</span>
                       </el-option>
                       <template #tag>
-                        <!--                <span v-for="(mark,i) in item.mark" :key="i">
+                        &lt;!&ndash;                <span v-for="(mark,i) in item.mark" :key="i">
                                           <el-tag closable>{{ mark }}</el-tag>
-                                        </span>-->
+                                        </span>&ndash;&gt;
                         <MySpecialTag v-for="(mark,i) in item.mark" :key="i" closable
                                       :special-tag-data="tagList[mark]"
                                       @close="delItemTag(item, mark)"
@@ -300,13 +300,444 @@
               </template>
             </el-card>
           </template>
-      </VirtualWaterfall>
+      </VirtualWaterfall>-->
 
 
+<!--    {{ vListData }}-->
 
+    <VList :data="vListData" #default="{ item, index }" :bufferSize="2100" class="vList" v-if="useVirtual">
+      <div class="vListLine" style="padding-bottom: 1rem;">
+        <el-card v-for="(item2,i) in item.line" :key="i"
+               :class="item2.isSeen?['fileItem','isSeen']:['fileItem']"
+               :shadow="item2.isSeen?'never':'always'" :ref="item2.path"
+      ><!-- v-for="(item,i) in files" :key="i" -->
+        <template #header>
+          <el-text line-clamp="3" class="fileTitle">{{ item2.name }}</el-text>
+        </template>
+        <!--      {{ encodeURI('/api/library/img?img=' + item2.image) }}-->
+        <el-badge :value="item2.subdirectories" type="primary" :is-dot="item2.subdirectories<2"
+                  class="subdirectories" :max="999" :offset="calculateOffset(item2.subdirectories)"
+                  v-if="item2.isFile===false"
+        >
+          <el-image class="fileImage" :src=" encodeURI('/api/library/img?token=' + getToken() + '&img=' + encodeURIComponent(item2.image)) " fit="cover"
+                    @dblclick="openPath(item2.path, item2.isFile, i)" @click="openPath(item2.path, item2.isFile, i)"
+                    v-if="showMode==='原生'"
+          />
+          <TImg class="fileImage" :authSrc=" encodeURI('/api/library/img?img=' + encodeURIComponent(item2.image)) " fit="cover"
+                @dblclick="openPath(item2.path, item2.isFile, i)" @click="openPath(item2.path, item2.isFile, i)" :is-lazy="true"
+                v-else
+          />
+          <!-- v-else -->
+        </el-badge>
 
+        <!--      <el-image class="fileImage" :src=" encodeURI('/api/library/img?token=' + getToken() + '&img=' + encodeURIComponent(item2.image)) " fit="cover"
+                        @dblclick="openPath(item2.path, item2.isFile, i)" @click="openPath(item2.path, item2.isFile, i)"
+                        v-if="showMode==='原生' && item2.isFile===true"
+              />-->
+        <TImg class="fileImage" :authSrc=" encodeURI('/api/library/img?img=' + encodeURIComponent(item2.image)) " fit="cover"
+              @dblclick="openPath(item2.path, item2.isFile, i)" @click="openPath(item2.path, item2.isFile, i)" :is-lazy="true"
+              v-if="item2.isFile===true"
+        />
 
+        <template #footer>
+          <div class="footer">
+            <div class="line">
+              <el-text size="small">{{ formatTime?formatTime(item2.time):item2.time }}</el-text>
+              <span class="gap-row">
+              <el-switch
+                  v-model="item2.isSeen"
+                  :active-action-icon="View"
+                  :inactive-action-icon="Hide"
+                  @change="updateItem(item2)"
+              />
+            </span>
+            </div>
+            <div class="line">
+              <el-rate v-model="item2.rate" clearable :colors="rateColor" @change="updateItem(item2)" />
+              <el-button v-if="isInFavoriteList(item2.path)===true && !item2.isFile" type="warning" link>
+                <el-icon class="favorites" @click="delFavorite(item2.path)"><Management /></el-icon>
+              </el-button>
+              <el-button v-if="isInFavoriteList(item2.path)===false && !item2.isFile" link>
+                <el-icon @click="addFavorite(item2.path)"><Management /></el-icon>
+              </el-button>
+            </div>
+            <div class="line">
+              <el-select
+                  v-model="item2.mark"
+                  multiple
+                  filterable
+                  allow-create
+                  default-first-option
+                  :reserve-keyword="false"
+                  placeholder="标记"
+                  @change="updateItem(item2)"
+                  :collapse-tags="isCollapseTags"
+                  :max-collapse-tags="maxShowFileTag_"
+              >
+                <el-option
+                    v-for="tagItem in outTags"
+                    :key="tagItem"
+                    :label="tagItem"
+                    :value="tagItem"
+                >
+                  <MySpecialTag v-if="tagList[tagItem]" :special-tag-data="tagList[tagItem]">{{ tagItem }}</MySpecialTag>
+                  <span v-else>{{ tagItem }}</span>
+                </el-option>
+                <template #tag>
+                  <!--                <span v-for="(mark,i) in item.mark" :key="i">
+                                    <el-tag closable>{{ mark }}</el-tag>
+                                  </span>-->
+                  <MySpecialTag v-for="(mark,i) in item2.mark" :key="i" closable
+                                :special-tag-data="tagList[mark]"
+                                @close="delItemTag(item2, mark)"
+                  >
+                    {{ mark }}
+                  </MySpecialTag>
+                </template>
+              </el-select>
+              <div class="delButton">
+                <el-popconfirm
+                    class="box-item"
+                    title="是否删除？"
+                    confirm-button-text="删除"
+                    placement="top-start"
+                    @confirm="delPath(item2.path)"
+                >
+                  <template #reference>
+                    <el-icon><DeleteFilled /></el-icon>
+                  </template>
+                </el-popconfirm>
+              </div>
+            </div>
+            <div class="line">
+              <el-input
+                  class="albumId"
+                  v-model="item2.aid"
+                  placeholder="未记录"
+                  readonly
+              >
+                <template #prefix>
+                  <el-text class="a-text" size="small">本子ID</el-text>
+                  <el-text class="a-hidden" size="small">ID</el-text>
+                </template>
+                <template #suffix>
+                  <el-button-group class="idChangeButtonGroup">
+                    <el-tooltip
+                        effect="dark"
+                        content="记录本子ID"
+                        placement="top-start"
+                    >
+                      <el-button @click="setAId(item2)" size="small"><el-icon><Edit /></el-icon></el-button>
+                    </el-tooltip>
+                    <el-tooltip
+                        effect="dark"
+                        content="更新本子"
+                        placement="top-start"
+                    >
+                      <el-button @click="downloadAlbum(item2.aid)" :disabled="!item2.aid" size="small"><el-icon><VideoPlay /></el-icon></el-button>
+                    </el-tooltip>
+                  </el-button-group>
+                </template>
+              </el-input>
+            </div>
+          </div>
+        </template>
+      </el-card>
+      </div>
+    </VList>
+<!--    <DynamicScroller
+        v-if="useVirtual"
+        :items="vListData"
+        :min-item-size="700"
+        :keyField="'path'"
+        class="scroller"
+    >
+      <template v-slot="{ item, index, active }">
+        <DynamicScrollerItem
+            :item="item"
+            :active="active"
+            :data-index="index"
+            :keyField="'path'"
+        >
+          <div class="vListLine" style="padding-bottom: 1rem;">
+            <el-card v-for="(item2,i) in item.line" :key="i"
+                     :class="item2.isSeen?['fileItem','isSeen']:['fileItem']"
+                     :shadow="item2.isSeen?'never':'always'" :ref="item2.path"
+            >&lt;!&ndash; v-for="(item,i) in files" :key="i" &ndash;&gt;
+              <template #header>
+                <el-text line-clamp="3" class="fileTitle">{{ item2.name }}</el-text>
+              </template>
+              &lt;!&ndash;      {{ encodeURI('/api/library/img?img=' + item2.image) }}&ndash;&gt;
+              <el-badge :value="item2.subdirectories" type="primary" :is-dot="item2.subdirectories<2"
+                        class="subdirectories" :max="999" :offset="calculateOffset(item2.subdirectories)"
+                        v-if="item2.isFile===false"
+              >
+                <el-image class="fileImage" :src=" encodeURI('/api/library/img?token=' + getToken() + '&img=' + encodeURIComponent(item2.image)) " fit="cover"
+                          @dblclick="openPath(item2.path, item2.isFile, i)" @click="openPath(item2.path, item2.isFile, i)"
+                          v-if="showMode==='原生'"
+                />
+                <TImg class="fileImage" :authSrc=" encodeURI('/api/library/img?img=' + encodeURIComponent(item2.image)) " fit="cover"
+                      @dblclick="openPath(item2.path, item2.isFile, i)" @click="openPath(item2.path, item2.isFile, i)" :is-lazy="true"
+                      v-else
+                />
+                &lt;!&ndash; v-else &ndash;&gt;
+              </el-badge>
 
+              &lt;!&ndash;      <el-image class="fileImage" :src=" encodeURI('/api/library/img?token=' + getToken() + '&img=' + encodeURIComponent(item2.image)) " fit="cover"
+                              @dblclick="openPath(item2.path, item2.isFile, i)" @click="openPath(item2.path, item2.isFile, i)"
+                              v-if="showMode==='原生' && item2.isFile===true"
+                    />&ndash;&gt;
+              <TImg class="fileImage" :authSrc=" encodeURI('/api/library/img?img=' + encodeURIComponent(item2.image)) " fit="cover"
+                    @dblclick="openPath(item2.path, item2.isFile, i)" @click="openPath(item2.path, item2.isFile, i)" :is-lazy="true"
+                    v-if="item2.isFile===true"
+              />
+
+              <template #footer>
+                <div class="footer">
+                  <div class="line">
+                    <el-text size="small">{{ formatTime?formatTime(item2.time):item2.time }}</el-text>
+                    <span class="gap-row">
+              <el-switch
+                  v-model="item2.isSeen"
+                  :active-action-icon="View"
+                  :inactive-action-icon="Hide"
+                  @change="updateItem(item2)"
+              />
+            </span>
+                  </div>
+                  <div class="line">
+                    <el-rate v-model="item2.rate" clearable :colors="rateColor" @change="updateItem(item2)" />
+                    <el-button v-if="isInFavoriteList(item2.path)===true && !item2.isFile" type="warning" link>
+                      <el-icon class="favorites" @click="delFavorite(item2.path)"><Management /></el-icon>
+                    </el-button>
+                    <el-button v-if="isInFavoriteList(item2.path)===false && !item2.isFile" link>
+                      <el-icon @click="addFavorite(item2.path)"><Management /></el-icon>
+                    </el-button>
+                  </div>
+                  <div class="line">
+                    <el-select
+                        v-model="item2.mark"
+                        multiple
+                        filterable
+                        allow-create
+                        default-first-option
+                        :reserve-keyword="false"
+                        placeholder="标记"
+                        @change="updateItem(item2)"
+                        :collapse-tags="isCollapseTags"
+                        :max-collapse-tags="maxShowFileTag_"
+                    >
+                      <el-option
+                          v-for="tagItem in outTags"
+                          :key="tagItem"
+                          :label="tagItem"
+                          :value="tagItem"
+                      >
+                        <MySpecialTag v-if="tagList[tagItem]" :special-tag-data="tagList[tagItem]">{{ tagItem }}</MySpecialTag>
+                        <span v-else>{{ tagItem }}</span>
+                      </el-option>
+                      <template #tag>
+                        &lt;!&ndash;                <span v-for="(mark,i) in item.mark" :key="i">
+                                          <el-tag closable>{{ mark }}</el-tag>
+                                        </span>&ndash;&gt;
+                        <MySpecialTag v-for="(mark,i) in item2.mark" :key="i" closable
+                                      :special-tag-data="tagList[mark]"
+                                      @close="delItemTag(item2, mark)"
+                        >
+                          {{ mark }}
+                        </MySpecialTag>
+                      </template>
+                    </el-select>
+                    <div class="delButton">
+                      <el-popconfirm
+                          class="box-item"
+                          title="是否删除？"
+                          confirm-button-text="删除"
+                          placement="top-start"
+                          @confirm="delPath(item2.path)"
+                      >
+                        <template #reference>
+                          <el-icon><DeleteFilled /></el-icon>
+                        </template>
+                      </el-popconfirm>
+                    </div>
+                  </div>
+                  <div class="line">
+                    <el-input
+                        class="albumId"
+                        v-model="item2.aid"
+                        placeholder="未记录"
+                        readonly
+                    >
+                      <template #prefix>
+                        <el-text class="a-text" size="small">本子ID</el-text>
+                        <el-text class="a-hidden" size="small">ID</el-text>
+                      </template>
+                      <template #suffix>
+                        <el-button-group class="idChangeButtonGroup">
+                          <el-tooltip
+                              effect="dark"
+                              content="记录本子ID"
+                              placement="top-start"
+                          >
+                            <el-button @click="setAId(item2)" size="small"><el-icon><Edit /></el-icon></el-button>
+                          </el-tooltip>
+                          <el-tooltip
+                              effect="dark"
+                              content="更新本子"
+                              placement="top-start"
+                          >
+                            <el-button @click="downloadAlbum(item2.aid)" :disabled="!item2.aid" size="small"><el-icon><VideoPlay /></el-icon></el-button>
+                          </el-tooltip>
+                        </el-button-group>
+                      </template>
+                    </el-input>
+                  </div>
+                </div>
+              </template>
+            </el-card>
+          </div>
+        </DynamicScrollerItem>
+      </template>
+    </DynamicScroller>-->
+    <el-scrollbar v-else>
+      <el-card v-for="(item2,i) in displayFiles" :key="i"
+               :class="item2.isSeen?['fileItem','isSeen']:['fileItem']"
+               :shadow="item2.isSeen?'never':'always'" :ref="item2.path"
+      ><!-- v-for="(item,i) in files" :key="i" -->
+        <template #header>
+          <el-text line-clamp="3" class="fileTitle">{{ item2.name }}</el-text>
+        </template>
+        <!--      {{ encodeURI('/api/library/img?img=' + item2.image) }}-->
+        <el-badge :value="item2.subdirectories" type="primary" :is-dot="item2.subdirectories<2"
+                  class="subdirectories" :max="999" :offset="calculateOffset(item2.subdirectories)"
+                  v-if="item2.isFile===false"
+        >
+          <el-image class="fileImage" :src=" encodeURI('/api/library/img?token=' + getToken() + '&img=' + encodeURIComponent(item2.image)) " fit="cover"
+                    @dblclick="openPath(item2.path, item2.isFile, i)" @click="openPath(item2.path, item2.isFile, i)"
+                    v-if="showMode==='原生'"
+          />
+          <TImg class="fileImage" :authSrc=" encodeURI('/api/library/img?img=' + encodeURIComponent(item2.image)) " fit="cover"
+                @dblclick="openPath(item2.path, item2.isFile, i)" @click="openPath(item2.path, item2.isFile, i)" :is-lazy="true"
+                v-else
+          />
+          <!-- v-else -->
+        </el-badge>
+
+        <!--      <el-image class="fileImage" :src=" encodeURI('/api/library/img?token=' + getToken() + '&img=' + encodeURIComponent(item2.image)) " fit="cover"
+                        @dblclick="openPath(item2.path, item2.isFile, i)" @click="openPath(item2.path, item2.isFile, i)"
+                        v-if="showMode==='原生' && item2.isFile===true"
+              />-->
+        <TImg class="fileImage" :authSrc=" encodeURI('/api/library/img?img=' + encodeURIComponent(item2.image)) " fit="cover"
+              @dblclick="openPath(item2.path, item2.isFile, i)" @click="openPath(item2.path, item2.isFile, i)" :is-lazy="true"
+              v-if="item2.isFile===true"
+        />
+
+        <template #footer>
+          <div class="footer">
+            <div class="line">
+              <el-text size="small">{{ formatTime?formatTime(item2.time):item2.time }}</el-text>
+              <span class="gap-row">
+              <el-switch
+                  v-model="item2.isSeen"
+                  :active-action-icon="View"
+                  :inactive-action-icon="Hide"
+                  @change="updateItem(item2)"
+              />
+            </span>
+            </div>
+            <div class="line">
+              <el-rate v-model="item2.rate" clearable :colors="rateColor" @change="updateItem(item2)" />
+              <el-button v-if="isInFavoriteList(item2.path)===true && !item2.isFile" type="warning" link>
+                <el-icon class="favorites" @click="delFavorite(item2.path)"><Management /></el-icon>
+              </el-button>
+              <el-button v-if="isInFavoriteList(item2.path)===false && !item2.isFile" link>
+                <el-icon @click="addFavorite(item2.path)"><Management /></el-icon>
+              </el-button>
+            </div>
+            <div class="line">
+              <el-select
+                  v-model="item2.mark"
+                  multiple
+                  filterable
+                  allow-create
+                  default-first-option
+                  :reserve-keyword="false"
+                  placeholder="标记"
+                  @change="updateItem(item2)"
+                  :collapse-tags="isCollapseTags"
+                  :max-collapse-tags="maxShowFileTag_"
+              >
+                <el-option
+                    v-for="tagItem in outTags"
+                    :key="tagItem"
+                    :label="tagItem"
+                    :value="tagItem"
+                >
+                  <MySpecialTag v-if="tagList[tagItem]" :special-tag-data="tagList[tagItem]">{{ tagItem }}</MySpecialTag>
+                  <span v-else>{{ tagItem }}</span>
+                </el-option>
+                <template #tag>
+                  <!--                <span v-for="(mark,i) in item.mark" :key="i">
+                                    <el-tag closable>{{ mark }}</el-tag>
+                                  </span>-->
+                  <MySpecialTag v-for="(mark,i) in item2.mark" :key="i" closable
+                                :special-tag-data="tagList[mark]"
+                                @close="delItemTag(item2, mark)"
+                  >
+                    {{ mark }}
+                  </MySpecialTag>
+                </template>
+              </el-select>
+              <div class="delButton">
+                <el-popconfirm
+                    class="box-item"
+                    title="是否删除？"
+                    confirm-button-text="删除"
+                    placement="top-start"
+                    @confirm="delPath(item2.path)"
+                >
+                  <template #reference>
+                    <el-icon><DeleteFilled /></el-icon>
+                  </template>
+                </el-popconfirm>
+              </div>
+            </div>
+            <div class="line">
+              <el-input
+                  class="albumId"
+                  v-model="item2.aid"
+                  placeholder="未记录"
+                  readonly
+              >
+                <template #prefix>
+                  <el-text class="a-text" size="small">本子ID</el-text>
+                  <el-text class="a-hidden" size="small">ID</el-text>
+                </template>
+                <template #suffix>
+                  <el-button-group class="idChangeButtonGroup">
+                    <el-tooltip
+                        effect="dark"
+                        content="记录本子ID"
+                        placement="top-start"
+                    >
+                      <el-button @click="setAId(item2)" size="small"><el-icon><Edit /></el-icon></el-button>
+                    </el-tooltip>
+                    <el-tooltip
+                        effect="dark"
+                        content="更新本子"
+                        placement="top-start"
+                    >
+                      <el-button @click="downloadAlbum(item2.aid)" :disabled="!item2.aid" size="small"><el-icon><VideoPlay /></el-icon></el-button>
+                    </el-tooltip>
+                  </el-button-group>
+                </template>
+              </el-input>
+            </div>
+          </div>
+        </template>
+      </el-card>
+    </el-scrollbar>
   </div>
 </template>
 <script>
@@ -316,10 +747,12 @@ import TImg from "@/components/T-Img.vue";
 import {ElMessageBox, ElNotification} from "element-plus";
 import API from "@/config/axios/axiosInstance.js";
 import MySpecialTag from "@/components/library/MySpecialTag.vue";
-// import { RecycleScroller,DynamicScroller,DynamicScrollerItem } from 'vue-virtual-scroller'
-// import { Virtualizer } from "virtua/vue";
+import { RecycleScroller,DynamicScroller,DynamicScrollerItem } from 'vue-virtual-scroller'
+import { VList } from "virtua/vue";
 // import VueMasonryWall from "vue-masonry-wall";
+/* 高级计算不可控，渲染距离不可调，弃用
 import { VirtualWaterfall } from '@lhlyu/vue-virtual-waterfall'
+*/
 /* 不支持 virtual
 import { LazyImg, Waterfall } from 'vue-waterfall-plugin-next'
 import 'vue-waterfall-plugin-next/dist/style.css'
@@ -335,19 +768,38 @@ export default {
     View() {
       return View
     },
+    vListData: function () {
+      let n = Math.floor(this.boxWidth / 260);
+
+      if(Array.isArray(this.files) && this.files.length>0){
+        let arr = this.arrayChunk(this.files, n);
+        console.log("vList", arr, n, this.files)
+        return arr.map((item)=>{
+          return {line: item}
+        })
+      }
+
+      // return [
+      //   this.boxWidth
+      //   , n
+      // ];
+      return []
+    }
   },
   //引入模块
-  components: {MySpecialTag, TImg
-    //, RecycleScroller,DynamicScroller,DynamicScrollerItem
+  components: {
+    MySpecialTag, TImg
+    , RecycleScroller,DynamicScroller,DynamicScrollerItem
     // ,Virtualizer
+    , VList
     // , VueMasonryWall
-    , VirtualWaterfall
+    /*, VirtualWaterfall*/
     /*, Waterfall, LazyImg*/
 
   },
   //父级传入数据
   props: {
-    inFiles: Object,
+    inFiles: Array,
     //inTags: Object,
     inTags: Array,
     // faFile: Array,
@@ -355,9 +807,9 @@ export default {
     maxShowFileTag: [String, Number, Object],
     favoritesList: Array,
     tagList: Object,
+    useVirtual: {type: Boolean, default:()=>{ return false; }}
   },
   data() {
-
     return {
       //双向绑定处理
       files: computed({
@@ -436,7 +888,25 @@ export default {
           }
           return [];
         },
-      })
+      }),
+
+      elem: "null",
+      boxWidth: 0,
+      resizeObserver: null,
+
+      // 真正绑定到模板 v-for 的数组
+      displayFiles: [],
+      // 分批控制句柄
+      animationFrameId: null,
+    }
+  },
+  watch: {
+    // 监听输入数据的变化，一旦变化就重新开始分批加载
+    inFiles: {
+      immediate: true,
+      handler(newVal) {
+        this.startBatchLoad(newVal);
+      }
     }
   },
   //方法
@@ -576,7 +1046,7 @@ export default {
       }
     },
 
-    calcItemHeight: function (item, bbb) {
+    /*calcItemHeight: function (item, bbb) {
       //console.log("calcItemHeight", item, bbb, item.mark);
 
       // let element = this.$refs[aaa.path];
@@ -621,14 +1091,83 @@ export default {
 
 
       return 750;
-    }
+    }*/
+
+    arrayChunk: function (arr, size) {
+      //console.log("arrayChunk",arr, size, Math.floor(arr.length / size))
+      if(size<1){size=1;}
+      return Array.from({ length: Math.ceil(arr.length / size) }, (_, i) =>
+          arr.slice(i * size, i * size + size)
+      );
+    },
+
+    // 处理原始数据（对应你之前 computed 里的逻辑）
+    processData(rawList) {
+      if (!rawList) return [];
+      // 浅拷贝一份，避免直接修改 props
+      const list = [...rawList];
+      return list.map(file => {
+        if (typeof file.mark === 'string' && file.mark.trim() !== "") {
+          try {
+            file.mark = JSON.parse(file.mark);
+          } catch (e) {
+            file.mark = [file.mark];
+          }
+        }
+        return file;
+      });
+    },
+    // 分批加载数据
+    startBatchLoad(rawList) {
+      // 1. 清理之前的任务，防止多次触发叠加
+      cancelAnimationFrame(this.animationFrameId);
+      this.displayFiles = [];
+
+      // 2. 预处理数据
+      const allProcessedData = this.processData(rawList);
+
+      // 3. 开始分批
+      const batchSize = 20; // 建议初始值设小一点，保证首屏瞬间出来
+      let current = 0;
+
+      const next = () => {
+        if (current < allProcessedData.length) {
+          // 取出一批数据
+          const nextBatch = allProcessedData.slice(current, current + batchSize);
+          // 推入显示列表
+          this.displayFiles.push(...nextBatch);
+          current += batchSize;
+
+          //setTimeout(()=>this.animationFrameId = requestAnimationFrame(next), 10)
+          // 请求下一帧更新
+          this.animationFrameId = requestAnimationFrame(next);
+        }
+      };
+
+      next();
+    },
   },
   //启动事件
   mounted() {
     /*console.log("test001", this.$store.state["user"].token)*/
+
+    this.elem = this.$refs["Box"];
+    console.log(this.elem)
+    this.resizeObserver = new ResizeObserver(entries => {
+      for (let entry of entries) {
+        console.log('Element size changed:', entry, entry.contentRect);
+        this.boxWidth = entry.contentRect.width;
+      }
+    });
+    this.resizeObserver.observe(this.elem);
+
+    this.boxWidth = this.elem.getClientRects().width;
   },
   //销毁
   beforeUnmount() {
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
+    }
   }
 }
 </script>
@@ -652,5 +1191,25 @@ export default {
   //    width: auto !important;
   //  }
   //}
+
+  .el-scrollbar{
+    width: 100%;
+    height: 100%;
+
+    .el-scrollbar__view{
+      content-visibility: auto;
+      contain-intrinsic-size: 260px 600px;
+    }
+  }
+  .el-scrollbar .el-scrollbar__view, .vListLine{
+    width: 100%;
+    display: grid;
+    gap: 1rem;
+    /*grid-template-columns: repeat(auto-fill, 240px);*/
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    grid-auto-rows: min-content;
+    align-items: start;
+    justify-content: space-around;
+  }
 }
 </style>

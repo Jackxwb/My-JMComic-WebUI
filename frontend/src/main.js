@@ -13,6 +13,10 @@ import ElementPlus from 'element-plus';
 import 'element-plus/theme-chalk/index.css';
 import 'element-plus/dist/index.css';
 
+// vue-virtual-scroller
+import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
+import VueVirtualScroller from 'vue-virtual-scroller'
+
 import "@/utils/DateUtil.js"
 
 //前端MOCK
@@ -24,6 +28,7 @@ import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
 // from: https://github.com/element-plus/element-plus/issues/10630
 // 另外解决 el-table 不能缩小，需要在 el-table 外面的容器加上 { flex: 1; width: 0 } 样式
 // form: https://github.com/element-plus/element-plus/issues/6202#issuecomment-1047527166
+
 const debounce = (fn, delay) => {
     let timer = null;
     return function () {
@@ -53,6 +58,7 @@ app.use(store)
     .use(ElementPlus, {
         locale: zhCn,
     })
+    .use(VueVirtualScroller)
 app.mount('#app')
 
 //element-plus/icons-vue 注册所有图标
